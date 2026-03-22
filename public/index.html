@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CarePaRRVA – Trade Submission Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --teal:#00C8C8; --teal-dk:#009999; --navy:#0D1B2A; --navy-m:#162030;
+  --navy-l:#1E2E3F; --panel:#192636; --border:rgba(0,200,200,.18);
+  --borderl:rgba(255,255,255,.07); --text:#E8F4F4; --muted:#7BA8B0;
+  --ok:#22D49A; --err:#FF5E7A; --warn:#FFB444;
+  --mono:'DM Mono',monospace; --sans:'Sora',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--navy);color:var(--text);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,200,200,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,200,200,.04) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;top:-200px;right:-200px;width:600px;height:600px;background:radial-gradient(circle,rgba(0,200,200,.08) 0%,transparent 70%);pointer-events:none;z-index:0}
+.app{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:0 24px 80px}
+
+/* HEADER */
+header{display:flex;align-items:center;justify-content:space-between;padding:28px 0 32px;border-bottom:1px solid var(--border);margin-bottom:32px;flex-wrap:wrap;gap:12px}
+.logo{display:flex;align-items:center;gap:14px}
+.logo-icon{width:42px;height:42px;background:linear-gradient(135deg,var(--teal),var(--teal-dk));border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:var(--navy);box-shadow:0 0 18px rgba(0,200,200,.3)}
+.logo-text h1{font-size:19px;font-weight:700;letter-spacing:-.3px}
+.logo-text p{font-size:11px;color:var(--muted);letter-spacing:.7px;text-transform:uppercase}
+.hdr-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.badge{font-family:var(--mono);font-size:10px;color:var(--teal);background:rgba(0,200,200,.08);border:1px solid var(--border);border-radius:20px;padding:4px 12px;letter-spacing:.4px}
+
+/* STATUS BAR */
+.sbar{display:flex;align-items:center;gap:7px;font-size:11px;font-family:var(--mono);padding:6px 12px;background:var(--navy-m);border:1px solid var(--borderl);border-radius:8px}
+.sdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sdot.ok{background:var(--ok);box-shadow:0 0 6px var(--ok);animation:pulse 2s infinite}
+.sdot.err{background:var(--err)}
+.sdot.spin{background:var(--warn);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* STEPS */
+.steps{display:flex;align-items:center;margin-bottom:36px}
+.step{display:flex;align-items:center;gap:9px;cursor:pointer;padding:9px 18px;border-radius:8px;transition:background .2s;flex:1;justify-content:center}
+.step:hover{background:rgba(0,200,200,.04)}
+.snum{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;border:1.5px solid var(--border);color:var(--muted);transition:all .3s;flex-shrink:0}
+.step.active .snum{background:var(--teal);border-color:var(--teal);color:var(--navy);box-shadow:0 0 12px rgba(0,200,200,.4)}
+.step.done .snum{background:rgba(34,212,154,.15);border-color:var(--ok);color:var(--ok)}
+.slbl{font-size:12px;font-weight:500;color:var(--muted);transition:color .3s}
+.step.active .slbl{color:var(--teal)}
+.step.done .slbl{color:var(--ok)}
+.sconn{width:40px;height:1px;background:var(--border);flex-shrink:0}
+
+/* CARD */
+.card{background:var(--panel);border:1px solid var(--borderl);border-radius:16px;overflow:hidden;margin-bottom:20px;animation:fadeUp .35s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.ch{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--borderl);background:rgba(0,0,0,.14)}
+.ct{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:600}
+.ctag{font-family:var(--mono);font-size:10px;color:var(--teal);background:rgba(0,200,200,.08);padding:2px 8px;border-radius:4px}
+.cb{padding:22px}
+
+/* FORMS */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.grid-cred{display:grid;grid-template-columns:1fr 1fr 110px;gap:14px;align-items:end}
+.f{display:flex;flex-direction:column;gap:6px}
+.f.s2{grid-column:span 2}
+label{font-size:10px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.7px}
+label .r{color:var(--teal);margin-left:2px}
+label .o{color:var(--muted);font-size:9px;font-weight:400;text-transform:none;margin-left:3px}
+input,select{background:var(--navy-l);border:1px solid var(--borderl);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:13px;padding:9px 13px;outline:none;transition:border-color .2s,box-shadow .2s;width:100%;appearance:none}
+input:focus,select:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,200,200,.12)}
+input::placeholder{color:rgba(255,255,255,.18)}
+select{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' viewBox='0 0 11 7'%3E%3Cpath fill='%237BA8B0' d='M5.5 7L0 0h11z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;padding-right:32px}
+select option{background:var(--navy-m)}
+
+/* TABS */
+.tabs{display:flex;gap:3px;background:var(--navy-m);border:1px solid var(--borderl);border-radius:10px;padding:3px;margin-bottom:22px;flex-wrap:wrap}
+.tab{flex:1;padding:8px 10px;border-radius:7px;font-size:11px;font-weight:500;text-align:center;cursor:pointer;transition:all .2s;color:var(--muted);user-select:none;white-space:nowrap;min-width:80px}
+.tab.active{background:var(--teal);color:var(--navy);font-weight:600;box-shadow:0 2px 8px rgba(0,200,200,.28)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 22px;border-radius:9px;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .2s}
+.btn-p{background:var(--teal);color:var(--navy);box-shadow:0 0 18px rgba(0,200,200,.22)}
+.btn-p:hover{background:#00E0E0;box-shadow:0 0 26px rgba(0,200,200,.38);transform:translateY(-1px)}
+.btn-p:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-s{background:transparent;color:var(--teal);border:1px solid var(--border)}
+.btn-s:hover{background:rgba(0,200,200,.07)}
+.btn-d{background:rgba(255,94,122,.1);color:var(--err);border:1px solid rgba(255,94,122,.22)}
+
+/* ALERTS */
+.alert{border-radius:10px;padding:13px 16px;font-size:12px;display:flex;align-items:flex-start;gap:10px;margin-bottom:16px;line-height:1.5}
+.ai{font-size:15px;flex-shrink:0;margin-top:1px}
+.a-ok{background:rgba(34,212,154,.1);border:1px solid rgba(34,212,154,.22);color:var(--ok)}
+.a-err{background:rgba(255,94,122,.1);border:1px solid rgba(255,94,122,.22);color:var(--err)}
+.a-info{background:rgba(0,200,200,.07);border:1px solid var(--border);color:var(--teal)}
+.a-warn{background:rgba(255,180,68,.1);border:1px solid rgba(255,180,68,.22);color:var(--warn)}
+
+/* MISC */
+.token-box{background:var(--navy);border:1px solid var(--borderl);border-radius:10px;padding:13px;font-family:var(--mono);font-size:10px;color:var(--teal);word-break:break-all;line-height:1.6;max-height:90px;overflow-y:auto;margin-top:10px}
+.divider{height:1px;background:var(--borderl);margin:20px 0}
+.resp-panel{background:var(--navy);border:1px solid var(--borderl);border-radius:10px;padding:14px;font-family:var(--mono);font-size:11px;line-height:1.7;max-height:280px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;color:var(--muted);margin-top:10px}
+.spinner{width:15px;height:15px;border:2px solid rgba(13,27,42,.4);border-top-color:var(--navy);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.enc-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-family:var(--mono);color:var(--ok);background:rgba(34,212,154,.08);border:1px solid rgba(34,212,154,.18);border-radius:20px;padding:3px 9px}
+.enc-dot{width:5px;height:5px;border-radius:50%;background:var(--ok);animation:pulse 2s infinite}
+.panel{display:none}
+.panel.active{display:block;animation:fadeUp .3s ease}
+.view{display:none}
+.view.active{display:block}
+.ft{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:6px}
+.helper{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.4}
+.intro{display:flex;gap:18px;margin-bottom:28px;padding:18px;background:rgba(0,200,200,.04);border:1px solid var(--border);border-radius:14px;align-items:flex-start}
+.intro-ico{font-size:26px;flex-shrink:0}
+.intro-text h2{font-size:15px;font-weight:600;margin-bottom:5px}
+.intro-text p{font-size:11px;color:var(--muted);line-height:1.6}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--navy-m)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+@media(max-width:680px){
+  .grid,.grid3,.grid-cred{grid-template-columns:1fr}
+  .f.s2{grid-column:span 1}
+  .steps{flex-wrap:wrap;gap:6px}
+  .sconn{display:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">CE</div>
+    <div class="logo-text">
+      <h1>CarePaRRVA</h1>
+      <p>Trade Submission Portal · Powered by CareEdge</p>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <div class="sbar" id="sbar"><div class="sdot spin" id="sdot"></div><span id="stxt">Connecting…</span></div>
+    <div class="badge">v1.0.0 Pilot</div>
+  </div>
+</header>
+
+<!-- STEPS -->
+<div class="steps">
+  <div class="step active" id="st1" onclick="goStep(1)"><div class="snum">1</div><div class="slbl">Authenticate</div></div>
+  <div class="sconn"></div>
+  <div class="step" id="st2" onclick="goStep(2)"><div class="snum">2</div><div class="slbl">Submit Trade</div></div>
+  <div class="sconn"></div>
+  <div class="step" id="st3" onclick="goStep(3)"><div class="snum">3</div><div class="slbl">Response</div></div>
+</div>
+
+<!-- ══════════ STEP 1: AUTH ══════════ -->
+<div class="view active" id="v1">
+  <div class="intro">
+    <div class="intro-ico">🔐</div>
+    <div class="intro-text">
+      <h2>Generate Authentication Token</h2>
+      <p>Enter your PARRVA credentials. Your password is encrypted server-side using the PARRVA RSA-OAEP-256 public key before being sent — it never travels in plaintext. A JWE bearer token is returned for Step 2.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch">
+      <div class="ct">🏛️ Credentials <span class="ctag">STEP 1</span></div>
+      <span class="enc-badge"><span class="enc-dot"></span> RSA-OAEP-256 · A256GCM</span>
+    </div>
+    <div class="cb">
+      <div id="auth-alert"></div>
+      <div class="grid-cred">
+        <div class="f"><label>Enrolment ID <span class="r">*</span></label><input id="userId" placeholder="e.g. IAID000496 or RA000038A" autocomplete="username"/></div>
+        <div class="f"><label>Password <span class="r">*</span></label><input type="password" id="password" placeholder="Your PARRVA password" autocomplete="current-password"/></div>
+        <div class="f"><label>Role <span class="r">*</span></label>
+          <select id="role"><option value="TM">TM</option><option value="IA">IA</option><option value="RA">RA</option></select>
+        </div>
+      </div>
+      <div class="helper" style="margin-top:12px">⚡ All encryption happens server-side. Your credentials are never exposed in the browser.</div>
+      <div class="divider"></div>
+      <div class="ft">
+        <div id="tok-status" style="font-size:12px;color:var(--muted)">No token yet</div>
+        <button class="btn btn-p" id="auth-btn" onclick="doAuth()">
+          <span id="auth-lbl">Generate Token</span>
+          <span id="auth-spin" class="spinner" style="display:none"></span>
+        </button>
+      </div>
+      <div id="tok-wrap" style="display:none;margin-top:14px">
+        <div class="helper">✅ Token received — valid ~15 min:</div>
+        <div class="token-box" id="tok-box"></div>
+        <div style="margin-top:12px;display:flex;gap:9px;flex-wrap:wrap">
+          <button class="btn btn-s" onclick="copyTok()" style="font-size:11px;padding:7px 14px">📋 Copy Token</button>
+          <button class="btn btn-p" onclick="goStep(2)" style="font-size:11px;padding:7px 16px">Next: Submit Trade →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch"><div class="ct">🔑 Manual Token Override</div></div>
+    <div class="cb">
+      <div class="f"><label>Paste Bearer Token <span class="o">(if you already have one)</span></label>
+        <input id="man-tok" placeholder="eyJhbGciOiJIUzI1NiJ9…"/>
+      </div>
+      <div style="margin-top:10px">
+        <button class="btn btn-s" onclick="useManTok()" style="font-size:11px;padding:7px 16px">Use This Token & Go to Step 2 →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ STEP 2: SUBMIT ══════════ -->
+<div class="view" id="v2">
+  <div class="intro">
+    <div class="intro-ico">📊</div>
+    <div class="intro-text">
+      <h2>Submit Trade / Advice</h2>
+      <p>Fill in your trade details and click Submit. The server automatically encrypts the payload with the PDC public key and routes to the correct PARRVA endpoint based on your Enrolment ID prefix.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch">
+      <div class="ct">⚙️ Submission Type</div>
+      <span class="enc-badge"><span class="enc-dot"></span> PDC Encrypted Server-Side</span>
+    </div>
+    <div class="cb">
+      <div class="tabs">
+        <div class="tab active" onclick="selType('intraday',this)">📈 Intraday</div>
+        <div class="tab" onclick="selType('singlestock',this)">📉 Single Stock</div>
+        <div class="tab" onclick="selType('derivative',this)">🔗 Derivative</div>
+        <div class="tab" onclick="selType('strategy',this)">🎯 Strategy</div>
+        <div class="tab" onclick="selType('algoinput',this)">🤖 Algo Input</div>
+      </div>
+
+      <!-- INTRADAY -->
+      <div class="panel active" id="p-intraday">
+        <div class="grid">
+          <div class="f"><label>Advice Name <span class="r">*</span></label><input id="i-adviceName" placeholder="e.g. RELIANCE-BUY-22Mar"/></div>
+          <div class="f"><label>Call Type <span class="r">*</span></label><select id="i-techCallType"><option>BUY</option><option>SELL</option></select></div>
+          <div class="f"><label>Exchange <span class="r">*</span></label><select id="i-exchange"><option>NSE</option><option>BSE</option></select></div>
+          <div class="f"><label>Security Entry Date &amp; Time <span class="r">*</span></label><input type="datetime-local" id="i-securityEntryDt"/></div>
+          <div class="f"><label>Scrip Name <span class="r">*</span></label><input id="i-techCallId" placeholder="e.g. RELIANCE"/></div>
+          <div class="f"><label>ISIN <span class="r">*</span></label><input id="i-isin" placeholder="e.g. INE002A01018"/></div>
+          <div class="f"><label>Entry Price <span class="r">*</span></label><input type="number" id="i-entryPrice" placeholder="0.00" min="0.01" step="0.01"/></div>
+          <div class="f"><label>Target Price <span class="r">*</span></label><input type="number" id="i-targetPrice" placeholder="0.00" min="0.01" step="0.01"/></div>
+          <div class="f"><label>Stop Loss <span class="r">*</span></label><input type="number" id="i-stopLoss" placeholder="0.00" min="0.01" step="0.01"/></div>
+          <div class="f"><label>Exit Date &amp; Time <span class="o">(optional)</span></label><input type="datetime-local" id="i-exitDate"/></div>
+          <div class="f"><label>Exit Price <span class="o">(optional – manual exit)</span></label><input type="number" id="i-exitPrice" placeholder="0.00" min="0.01" step="0.01"/></div>
+          <div class="f"><label>Note <span class="o">(optional)</span></label><input id="i-note" placeholder="Any remarks"/></div>
+        </div>
+      </div>
+
+      <!-- SINGLE STOCK -->
+      <div class="panel" id="p-singlestock">
+        <div class="grid">
+          <div class="f"><label>Recommendation Type <span class="r">*</span></label><select id="ss-type"><option>BUY</option><option>SELL</option></select></div>
+          <div class="f"><label>Exchange <span class="r">*</span></label><select id="ss-exchange"><option>NSE</option><option>BSE</option></select></div>
+          <div class="f"><label>Advice Name <span class="r">*</span></label><input id="ss-adviceName" placeholder="e.g. INFY-BUY-22Mar"/></div>
+          <div class="f"><label>Entry Date &amp; Time <span class="r">*</span></label><input type="datetime-local" id="ss-entryDt"/></div>
+          <div class="f"><label>Stock Name <span class="r">*</span></label><input id="ss-stockName" placeholder="e.g. INFY"/></div>
+          <div class="f"><label>ISIN <span class="r">*</span></label><input id="ss-isin" placeholder="e.g. INE009A01021"/></div>
+          <div class="f"><label>Horizon (days) <span class="r">*</span></label><input type="number" id="ss-horizon" placeholder="e.g. 30" min="1"/></div>
+          <div class="f"><label>Entry Price <span class="r">*</span></label><input type="number" id="ss-entryPrice" placeholder="0.00" min="0.01" step="0.01"/></div>
+          <div class="f"><label>Target Price <span class="r">*</span></label><input type="number" id="ss-targetPrice" placeholder="0.00" min="0.01" step="0.01"/></div>
+          <div class="f"><label>Stop Loss <span class="r">*</span></label><input type="number" id="ss-slPrice" placeholder="0.00" min="0.01" step="0.01"/></div>
+          <div class="f"><label>Exit Date &amp; Time <span class="o">(optional)</span></label><input type="datetime-local" id="ss-exitDt"/></div>
+          <div class="f"><label>Exit Price <span class="o">(optional)</span></label><input type="number" id="ss-exitPrice" placeholder="0.00" min="0.01" step="0.01"/></div>
+          <div class="f"><label>Note <span class="o">(optional)</span></label><input id="ss-note" placeholder="Any remarks"/></div>
+        </div>
+      </div>
+
+      <!-- DERIVATIVE -->
+      <div class="panel" id="p-derivative">
+        <div class="grid">
+          <div class="f"><label>Recommendation Type <span class="r">*</span></label><select id="d-type"><option>BUY</option><option>SELL</option></select></div>
+          <div class="f"><label>Advice Name <span class="r">*</span></label><input id="d-adviceName" placeholder="e.g. NIFTY-FUT-BUY"/></div>
+          <div class="f"><label>Exchange <span class="r">*</span></label><select id="d-exchange"><option>NSE</option><option>BSE</option></select></div>
+          <div class="f"><label>Derivative Type <span class="r">*</span></label><select id="d-derType"><option value="FUT">FUT – Future</option><option value="OPT">OPT – Option</option></select></div>
+          <div class="f"><label>Option Type <span class="o">(for OPT)</span></label><select id="d-optType"><option value="CE">CE – Call</option><option value="PE">PE – Put</option></select></div>
+          <div class="f"><label>Strike Price <span class="o">(for OPT)</span></label><input id="d-strike" placeholder="e.g. 24000"/></div>
+          <div class="f"><label>Derivative Name <span class="r">*</span></label><input id="d-name" placeholder="e.g. NIFTY25MARFUT"/></div>
+          <div class="f"><label>Expiry Date <span class="r">*</span></label><input type="date" id="d-expiryDt"/></div>
+          <div class="f"><label>Entry Price <span class="r">*</span></label><input type="number" id="d-entryPrice" placeholder="0.00" min="0.01" step="0.01"/></div>
+          <div class="f"><label>Entry Date &amp; Time <span class="r">*</span></label><input type="datetime-local" id="d-entryDttm"/></div>
+          <div class="f"><label>Target Price <span class="r">*</span></label><input type="number" id="d-targetPrice" placeholder="0.00" min="0.01" step="0.01"/></div>
+          <div class="f"><label>Stop Loss <span class="r">*</span></label><input type="number" id="d-stopLoss" placeholder="0.00" min="0.01" step="0.01"/></div>
+          <div class="f"><label>Total Margin <span class="r">*</span></label><input type="number" id="d-margin" placeholder="0.00" min="0.01" step="0.01"/></div>
+          <div class="f"><label>Lot (size × qty) <span class="r">*</span></label><input type="number" id="d-lot" placeholder="e.g. 50" min="1"/></div>
+          <div class="f"><label>Is Intraday? <span class="r">*</span></label><select id="d-intraday"><option value="Yes">Yes</option><option value="No">No</option></select></div>
+          <div class="f"><label>Exit Date &amp; Time <span class="o">(optional)</span></label><input type="datetime-local" id="d-exitDttm"/></div>
+          <div class="f"><label>Exit Price <span class="o">(optional)</span></label><input type="number" id="d-exitPrice" placeholder="0.00" min="0.01" step="0.01"/></div>
+          <div class="f"><label>Note <span class="o">(optional)</span></label><input id="d-note" placeholder="Any remarks"/></div>
+        </div>
+      </div>
+
+      <!-- STRATEGY -->
+      <div class="panel" id="p-strategy">
+        <div class="grid" style="margin-bottom:18px">
+          <div class="f"><label>Advice Name <span class="r">*</span></label><input id="st-adviceName" placeholder="e.g. IRON-CONDOR-MAR"/></div>
+          <div class="f"><label>Exchange <span class="r">*</span></label><select id="st-exchange"><option>NSE</option><option>BSE</option></select></div>
+          <div class="f"><label>Strategy Name <span class="r">*</span></label><input id="st-name" placeholder="e.g. Iron Condor"/></div>
+          <div class="f"><label>Is Intraday? <span class="r">*</span></label><select id="st-intraday"><option value="No">No</option><option value="yes">Yes</option></select></div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <span style="font-size:13px;font-weight:600;color:var(--teal)">Strategy Legs</span>
+          <button class="btn btn-s" onclick="addLeg()" style="font-size:11px;padding:6px 13px">+ Add Leg</button>
+        </div>
+        <div id="legs-wrap">
+          <div class="alert a-info"><div class="ai">ℹ️</div><div>No legs yet. Click "+ Add Leg" above.</div></div>
+        </div>
+      </div>
+
+      <!-- ALGO INPUT -->
+      <div class="panel" id="p-algoinput">
+        <div class="alert a-info"><div class="ai">ℹ️</div><div>Submits algorithmic trading configuration. Fields must match your SEBI registration.</div></div>
+        <div class="grid">
+          <div class="f"><label>Exchange <span class="r">*</span></label><select id="al-exchange"><option>NSE</option><option>BSE</option></select></div>
+          <div class="f"><label>Trading Member Code <span class="r">*</span></label><input id="al-tm" placeholder="e.g. TM123"/></div>
+          <div class="f"><label>Algo ID <span class="r">*</span></label><input id="al-algoId" placeholder="e.g. ALGO-001"/></div>
+          <div class="f"><label>Unique Client Code (UCC) <span class="r">*</span></label><input id="al-ucc" placeholder="e.g. UCC12345"/></div>
+          <div class="f"><label>Segment <span class="r">*</span></label><select id="al-segment"><option value="CM">CM – Capital Market</option><option value="FO">FO – Futures &amp; Options</option></select></div>
+          <div class="f"><label>Fixed Capital (₹) <span class="r">*</span></label><input type="number" id="al-capital" placeholder="e.g. 100000" min="0.01" step="0.01"/></div>
+        </div>
+      </div>
+
+    </div><!-- /cb -->
+  </div><!-- /card -->
+
+  <div id="submit-alert"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between">
+    <button class="btn btn-s" onclick="goStep(1)">← Back to Auth</button>
+    <button class="btn btn-p" id="sub-btn" onclick="doSubmit()">
+      <span id="sub-lbl">🔒 Encrypt &amp; Submit</span>
+      <span id="sub-spin" class="spinner" style="display:none"></span>
+    </button>
+  </div>
+</div>
+
+<!-- ══════════ STEP 3: RESPONSE ══════════ -->
+<div class="view" id="v3">
+  <div class="card">
+    <div class="ch"><div class="ct">📬 Submission Response</div></div>
+    <div class="cb">
+      <div id="resp-alert"></div>
+      <div class="helper">Endpoint:</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--teal);margin:5px 0 14px;word-break:break-all" id="resp-ep">—</div>
+      <div class="helper">Raw server response:</div>
+      <div class="resp-panel" id="resp-panel">Awaiting submission…</div>
+      <div style="margin-top:16px;display:flex;gap:9px;flex-wrap:wrap">
+        <button class="btn btn-p" onclick="goStep(2)">← Submit Another</button>
+        <button class="btn btn-s" onclick="goStep(1)">🔄 Re-authenticate</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let token = '';
+let apiType = 'intraday';
+let legs = [];
+let legId = 0;
+
+// ── Server health ──────────────────────────────────────────────────────────
+async function checkHealth() {
+  try {
+    const r = await fetch('/api/health', { signal: AbortSignal.timeout(4000) });
+    if (r.ok) { setStatus('ok', 'Server connected ✓'); }
+    else throw new Error();
+  } catch { setStatus('err', 'Cannot reach server'); }
+}
+function setStatus(state, txt) {
+  const d = document.getElementById('sdot'), t = document.getElementById('stxt');
+  d.className = 'sdot ' + (state === 'ok' ? 'ok' : 'err');
+  t.textContent = txt;
+}
+
+// ── Navigation ─────────────────────────────────────────────────────────────
+function goStep(n) {
+  document.querySelectorAll('.view').forEach((el,i) => el.classList.toggle('active', i+1===n));
+  document.querySelectorAll('.step').forEach((el,i) => {
+    el.classList.remove('active','done');
+    if (i+1 < n) el.classList.add('done');
+    if (i+1 === n) el.classList.add('active');
+  });
+}
+
+// ── Tab selector ───────────────────────────────────────────────────────────
+function selType(type, el) {
+  apiType = type;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('p-' + type).classList.add('active');
+}
+
+// ── Auth ───────────────────────────────────────────────────────────────────
+async function doAuth() {
+  const userId = g('userId'), pw = document.getElementById('password').value.trim(), role = g('role');
+  if (!userId || !pw) { alert2('auth-alert','err','Please enter Enrolment ID and Password.'); return; }
+  setBusy('auth-btn','auth-lbl','auth-spin',true,'Sending to server…');
+  clearAlert('auth-alert');
+  try {
+    const res = await fetch('/api/authenticate', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({userId, password:pw, role}) });
+    const data = await res.json();
+    if (data.jwe) {
+      token = data.jwe;
+      document.getElementById('tok-box').textContent = token;
+      document.getElementById('tok-wrap').style.display = 'block';
+      document.getElementById('tok-status').innerHTML = '<span style="color:var(--ok)">✅ Token active</span>';
+      alert2('auth-alert','ok','Token generated! Proceed to Step 2.');
+    } else {
+      throw new Error(JSON.stringify(data.detail || data.error || data));
+    }
+  } catch(e) {
+    alert2('auth-alert','err','Authentication failed: ' + (e.message || 'Could not reach server.'));
+  } finally { setBusy('auth-btn','auth-lbl','auth-spin',false,'Generate Token'); }
+}
+
+function useManTok() {
+  const t = document.getElementById('man-tok').value.trim();
+  if (!t) { alert2('auth-alert','warn','Paste a token first.'); return; }
+  token = t;
+  document.getElementById('tok-box').textContent = t;
+  document.getElementById('tok-wrap').style.display = 'block';
+  document.getElementById('tok-status').innerHTML = '<span style="color:var(--warn)">⚠️ Manual token</span>';
+  goStep(2);
+}
+function copyTok() { navigator.clipboard.writeText(token).then(() => { alert2('auth-alert','info','Token copied!'); setTimeout(()=>clearAlert('auth-alert'),2000); }); }
+
+// ── Payload builder ────────────────────────────────────────────────────────
+function iso(id) { const v = g(id); return v ? new Date(v).toISOString() : null; }
+function num(id) { const v = g(id); return v ? parseFloat(v) : null; }
+
+function buildPayload() {
+  if (apiType === 'intraday') {
+    const o = { adviceName:g('i-adviceName'), techCallType:g('i-techCallType'), exchange:g('i-exchange'),
+      securityEntryDt:iso('i-securityEntryDt'), techCallId:g('i-techCallId'), isin:g('i-isin'),
+      techCallEntryPrice:num('i-entryPrice'), techCallTargetPrice:num('i-targetPrice'), techCallStopLoss:num('i-stopLoss') };
+    if (g('i-exitDate')) o.techCallExitDate = iso('i-exitDate');
+    if (num('i-exitPrice')) o.techCallExitPrice = num('i-exitPrice');
+    if (g('i-note')) o.note = g('i-note');
+    return [o];
+  }
+  if (apiType === 'singlestock') {
+    const o = { shortTermRecommendationType:g('ss-type'), exchange:g('ss-exchange'), adviceName:g('ss-adviceName'),
+      shortTermEntryDt:iso('ss-entryDt'), shortTermStockName:g('ss-stockName'), shortTermIsin:g('ss-isin'),
+      shortTermHorizon:num('ss-horizon'), shortTermEntryPrice:num('ss-entryPrice'),
+      shortTermTargetPrice:num('ss-targetPrice'), shortTermSlPrice:num('ss-slPrice') };
+    if (g('ss-exitDt')) o.shortTermExitDttm = iso('ss-exitDt');
+    if (num('ss-exitPrice')) o.shortTermExitPrice = num('ss-exitPrice');
+    if (g('ss-note')) o.note = g('ss-note');
+    return [o];
+  }
+  if (apiType === 'derivative') {
+    const o = { recommendationType:g('d-type'), adviceName:g('d-adviceName'), exchange:g('d-exchange'),
+      derivativeType:g('d-derType'), derivativeOptionType:g('d-optType'), derivativeName:g('d-name'),
+      derivativeExpiryDt:g('d-expiryDt'), derivativeEntryPrice:num('d-entryPrice'), derivativeEntryDttm:iso('d-entryDttm'),
+      derivativeTargetPrice:num('d-targetPrice'), derivativeStopLoss:num('d-stopLoss'),
+      derivativeTotalMargin:num('d-margin'), derivativeOptionStrikePrice:g('d-strike'),
+      isIntraday:g('d-intraday'), lot:num('d-lot') };
+    if (g('d-exitDttm')) o.derivativeExitDttm = iso('d-exitDttm');
+    if (num('d-exitPrice')) o.derivativeExitPrice = num('d-exitPrice');
+    if (g('d-note')) o.note = g('d-note');
+    return [o];
+  }
+  if (apiType === 'strategy') {
+    return [{ adviceName:g('st-adviceName'), exchange:g('st-exchange'), strategyName:g('st-name'),
+      isIntraday:g('st-intraday'),
+      strategyDetails: legs.map((l,i) => ({
+        recommendationType:l.type, derivativeName:l.name, derivativeOptionStrikePrice:l.strike,
+        derivativeOptionType:l.optType, derivativeType:l.derType, derivativeExpiryDt:l.expiry,
+        derivativeQuantity:parseFloat(l.qty)||1, derivativeEntryDttm:l.entryDttm?new Date(l.entryDttm).toISOString():null,
+        derivativeEntryPrice:parseFloat(l.entryPrice)||0, derivativeTotalMargin:parseFloat(l.margin)||0,
+        derivativeTargetPrice:parseFloat(l.target)||0, derivativeStopLoss:parseFloat(l.sl)||0,
+        legId:i+1, lot:parseFloat(l.lot)||1
+      }))
+    }];
+  }
+  if (apiType === 'algoinput') {
+    return [{ exchange:g('al-exchange'), tradingMember:g('al-tm'), algoId:g('al-algoId'),
+      uniqueClientCode:g('al-ucc'), segment:g('al-segment'), fixedCapital:num('al-capital') }];
+  }
+}
+
+// ── Submit ─────────────────────────────────────────────────────────────────
+async function doSubmit() {
+  if (!token) { alert2('submit-alert','warn','⚠️ No token. Please authenticate in Step 1 first.'); return; }
+  clearAlert('submit-alert');
+  let payload;
+  try { payload = buildPayload(); } catch(e) { alert2('submit-alert','err','Payload error: '+e.message); return; }
+  const enrollmentId = g('userId');
+  setBusy('sub-btn','sub-lbl','sub-spin',true,'Encrypting & Submitting…');
+  try {
+    const res = await fetch(`/api/submit/${apiType}`, { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ token, enrollmentId, payload }) });
+    const data = await res.json();
+    document.getElementById('resp-panel').textContent = JSON.stringify(data.response||data, null, 2);
+    document.getElementById('resp-ep').textContent = data.endpoint || '—';
+    if (data.status_code && data.status_code < 300) {
+      alert2('resp-alert','ok',`✅ Success! HTTP ${data.status_code} from PDC.`);
+    } else {
+      alert2('resp-alert','err',`❌ HTTP ${data.status_code||res.status} from server. See response below.`);
+    }
+    goStep(3);
+  } catch(e) {
+    alert2('submit-alert','err','Submission failed: '+(e.message||'Network error'));
+  } finally { setBusy('sub-btn','sub-lbl','sub-spin',false,'🔒 Encrypt & Submit'); }
+}
+
+// ── Strategy legs ──────────────────────────────────────────────────────────
+function addLeg() {
+  legId++;
+  legs.push({ id:legId, type:'BUY', derType:'FUT', optType:'CE', name:'', strike:'', expiry:'', qty:1, entryDttm:'', entryPrice:'', margin:'', target:'', sl:'', lot:1 });
+  renderLegs();
+}
+function remLeg(id) { legs = legs.filter(l=>l.id!==id); renderLegs(); }
+function upLeg(id,k,v) { const l=legs.find(x=>x.id===id); if(l) l[k]=v; }
+
+function renderLegs() {
+  const w = document.getElementById('legs-wrap');
+  if (!legs.length) { w.innerHTML='<div class="alert a-info"><div class="ai">ℹ️</div><div>No legs yet. Click "+ Add Leg" above.</div></div>'; return; }
+  w.innerHTML = legs.map((l,i) => `
+    <div class="card" style="margin-bottom:14px">
+      <div class="ch"><div class="ct">Leg ${i+1}</div><button class="btn btn-d" onclick="remLeg(${l.id})" style="font-size:11px;padding:5px 11px">Remove</button></div>
+      <div class="cb">
+        <div class="grid3">
+          <div class="f"><label>Type *</label><select onchange="upLeg(${l.id},'type',this.value)"><option ${l.type==='BUY'?'selected':''}>BUY</option><option ${l.type==='SELL'?'selected':''}>SELL</option></select></div>
+          <div class="f"><label>Derivative Type *</label><select onchange="upLeg(${l.id},'derType',this.value)"><option value="FUT" ${l.derType==='FUT'?'selected':''}>FUT</option><option value="OPT" ${l.derType==='OPT'?'selected':''}>OPT</option></select></div>
+          <div class="f"><label>Option Type</label><select onchange="upLeg(${l.id},'optType',this.value)"><option value="CE" ${l.optType==='CE'?'selected':''}>CE</option><option value="PE" ${l.optType==='PE'?'selected':''}>PE</option></select></div>
+          <div class="f"><label>Derivative Name *</label><input value="${l.name}" placeholder="e.g. NIFTY25MAR" oninput="upLeg(${l.id},'name',this.value)"/></div>
+          <div class="f"><label>Strike Price</label><input value="${l.strike}" placeholder="e.g. 24000" oninput="upLeg(${l.id},'strike',this.value)"/></div>
+          <div class="f"><label>Expiry Date *</label><input type="date" value="${l.expiry}" oninput="upLeg(${l.id},'expiry',this.value)"/></div>
+          <div class="f"><label>Entry Price *</label><input type="number" value="${l.entryPrice}" placeholder="0.00" oninput="upLeg(${l.id},'entryPrice',this.value)"/></div>
+          <div class="f"><label>Entry Datetime *</label><input type="datetime-local" value="${l.entryDttm}" oninput="upLeg(${l.id},'entryDttm',this.value)"/></div>
+          <div class="f"><label>Target Price *</label><input type="number" value="${l.target}" placeholder="0.00" oninput="upLeg(${l.id},'target',this.value)"/></div>
+          <div class="f"><label>Stop Loss *</label><input type="number" value="${l.sl}" placeholder="0.00" oninput="upLeg(${l.id},'sl',this.value)"/></div>
+          <div class="f"><label>Total Margin *</label><input type="number" value="${l.margin}" placeholder="0.00" oninput="upLeg(${l.id},'margin',this.value)"/></div>
+          <div class="f"><label>Lot *</label><input type="number" value="${l.lot}" placeholder="e.g. 50" oninput="upLeg(${l.id},'lot',this.value)"/></div>
+          <div class="f"><label>Quantity *</label><input type="number" value="${l.qty}" placeholder="e.g. 1" oninput="upLeg(${l.id},'qty',this.value)"/></div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function g(id) { const el=document.getElementById(id); return el?el.value.trim():''; }
+function alert2(id, type, msg) {
+  const icons={ok:'✅',err:'❌',info:'ℹ️',warn:'⚠️'};
+  const cls={ok:'a-ok',err:'a-err',info:'a-info',warn:'a-warn'};
+  document.getElementById(id).innerHTML=`<div class="alert ${cls[type]}"><div class="ai">${icons[type]}</div><div>${msg}</div></div>`;
+}
+function clearAlert(id) { document.getElementById(id).innerHTML=''; }
+function setBusy(btn,lbl,spin,busy,txt) {
+  document.getElementById(btn).disabled=busy;
+  document.getElementById(lbl).textContent=txt;
+  document.getElementById(spin).style.display=busy?'block':'none';
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  checkHealth();
+  const now = new Date();
+  const local = new Date(now - now.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  ['i-securityEntryDt','ss-entryDt','d-entryDttm'].forEach(id => { const el=document.getElementById(id); if(el) el.value=local; });
+  const exp = document.getElementById('d-expiryDt');
+  if (exp) exp.value = now.toISOString().slice(0,10);
+});
+</script>
+</body>
+</html>
